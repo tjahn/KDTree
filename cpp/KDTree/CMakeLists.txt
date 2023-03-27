@@ -1,0 +1,2 @@
+add_library(kdtree INTERFACE)
+target_include_directories(kdtree INTERFACE include)
