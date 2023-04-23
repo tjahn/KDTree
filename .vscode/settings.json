@@ -61,6 +61,21 @@
     "unordered_map": "cpp",
     "variant": "cpp",
     "vector": "cpp",
-    "algorithm": "cpp"
+    "algorithm": "cpp",
+    "__tree": "cpp",
+    "deque": "cpp",
+    "map": "cpp",
+    "regex": "cpp",
+    "set": "cpp",
+    "__verbose_abort": "cpp",
+    "bit": "cpp",
+    "cinttypes": "cpp",
+    "codecvt": "cpp",
+    "condition_variable": "cpp",
+    "fstream": "cpp",
+    "future": "cpp",
+    "iomanip": "cpp",
+    "stack": "cpp",
+    "thread": "cpp"
   }
 }

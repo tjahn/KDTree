@@ -37,10 +37,15 @@ find_package(OpenMP REQUIRED)
 
 add_subdirectory(KDTree)
 
+add_executable(main_benchmark main_benchmark.cpp)
+target_link_libraries(main_benchmark PUBLIC 
+kdtree
+benchmark::benchmark
+OpenMP::OpenMP_CXX
+)
+
 add_executable(main main.cpp)
 target_link_libraries(main PUBLIC 
 kdtree
-benchmark::benchmark 
-Catch2::Catch2
 OpenMP::OpenMP_CXX
 )
