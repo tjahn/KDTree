@@ -20,19 +20,24 @@ int main()
     std::cout << "Start" << std::endl;
     srand(0);
 
+    const bool multithreaded = true;
+    const int N = 100000;
+
     using Db = kdtree::KDTree<2>;
     Db tree;
 
-    const int N = 10;
     const auto data = random_points(N, tree.get_dim());
-    tree.build(data.begin(), data.end());
+    tree.build(data.begin(), data.end(), multithreaded);
     std::cout << "Build db" << std::endl;
 
-    // query one point
-    kdtree::PointNNQuery<Db> query(tree);
-    std::array<float, 2> target{0.1f, 0.15f};
-    auto res = query.search(target.data());
-    std::cout << "(" << res.pointer[0] << ", " << res.pointer[1] << ") " << res.distance << std::endl;
+    if (true)
+    {
+        // query one point
+        kdtree::PointNNQuery<Db> query(tree);
+        std::array<float, 2> target{0.1f, 0.15f};
+        auto res = query.search(target.data());
+        std::cout << "(" << res.pointer[0] << ", " << res.pointer[1] << ") " << res.distance << std::endl;
+    }
 
     std::cout << "End" << std::endl;
     return 0;

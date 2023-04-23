@@ -2,7 +2,7 @@
 
 #include <vector>
 #include <numeric>
-
+#include <cassert>
 namespace kdtree
 {
 
@@ -60,7 +60,7 @@ namespace kdtree
         KDTree(int dim = _DIM) : dim(_DIM <= 0 ? dim : _DIM){};
 
         template <typename Iterator>
-        void build(const Iterator begin, const Iterator end);
+        void build(const Iterator begin, const Iterator end, const bool multithreaded = false);
 
         inline int get_dim() const
         {
@@ -79,6 +79,7 @@ namespace kdtree
 
     private:
         void _build(IndexType *begin, IndexType *end, int depth);
+        void _build_multithreaded(IndexType *begin, IndexType *end, int depth);
 
         template <typename Iterator>
         Iterator center(const Iterator begin, const Iterator end)
@@ -101,14 +102,26 @@ namespace kdtree
 
     template <int DIM>
     template <typename Iterator>
-    void KDTree<DIM>::build(const Iterator begin, const Iterator end)
+    void KDTree<DIM>::build(const Iterator begin, const Iterator end, const bool multithreaded)
     {
         assert((end - begin) % get_dim() == 0);
         idxs.resize((end - begin) / get_dim());
         std::iota(idxs.begin(), idxs.end(), 0);
         data.clear();
         data.insert(data.begin(), begin, end);
-        _build(idxs.data(), idxs.data() + idxs.size(), 0);
+
+        if (multithreaded)
+        {
+#pragma omp parallel
+#pragma omp single nowait
+            {
+                _build_multithreaded(idxs.data(), idxs.data() + idxs.size(), 0);
+            }
+        }
+        else
+        {
+            _build(idxs.data(), idxs.data() + idxs.size(), 0);
+        }
 
         // reorder data inplace
         std::vector<Scalar> sortedData(data.size());
@@ -138,6 +151,31 @@ namespace kdtree
         std::swap(*begin, *median);
         _build(begin + 1, median + 1, depth + 1);
         _build(median + 1, end, depth + 1);
+    }
+
+    template <int DIM>
+    void KDTree<DIM>::_build_multithreaded(IndexType *begin, IndexType *end, int depth)
+    {
+
+        if (end - begin < 512 || depth >= 5)
+        { // fall back to single threading when reaching certain cell-size
+            return _build(begin, end, depth);
+        }
+
+        const auto axis = depth % dim;
+        auto median = center(begin, end);
+
+        std::nth_element(begin, median, end, [axis, this](const IndexType small, const IndexType &large) -> bool
+                         { return data[small * dim + axis] < data[large * dim + axis]; });
+        std::swap(*begin, *median);
+
+        {
+#pragma omp task
+            _build_multithreaded(begin + 1, median + 1, depth + 1);
+#pragma omp task
+            _build_multithreaded(median + 1, end, depth + 1);
+#pragma omp taskwait
+        }
     }
 
 } // namespace kdtree
