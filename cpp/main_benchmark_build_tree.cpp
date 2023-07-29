@@ -4,6 +4,8 @@
 #include <benchmark/benchmark.h>
 
 #include <KDTree/KDTree.h>
+#include <KDTree/Queries/PointRadiusQuery.h>
+#include <KDTree/Queries/PointkNNQuery.h>
 #include <KDTree/Queries/PointNNQuery.h>
 
 using namespace std;
@@ -38,31 +40,6 @@ public:
     }
 };
 
-class MyDbFixture : public benchmark::Fixture
-{
-public:
-    Db2d tree;
-    kdtree::PointNNQuery<Db2d> pointQuery;
-
-    int numQueries = 1000;
-    vector<float> queries;
-
-    MyDbFixture() : pointQuery(tree) {}
-
-    void SetUp(const ::benchmark::State &state)
-    {
-        int N = state.range(0);
-        bool multithreaded = true;
-        const auto data = random_points(N, tree.get_dim());
-        tree.build(data.begin(), data.end(), multithreaded);
-        queries = random_points(numQueries, tree.get_dim());
-    }
-
-    void TearDown(const ::benchmark::State &state)
-    {
-    }
-};
-
 // test build tree
 BENCHMARK_DEFINE_F(MyRandomPointsFixture, BuildTree)
 (benchmark::State &st)
@@ -82,19 +59,5 @@ BENCHMARK_REGISTER_F(MyRandomPointsFixture, BuildTree)
 
     ->Args({long(1e6), 0})
     ->Args({long(1e6), 1});
-
-// test queries
-BENCHMARK_DEFINE_F(MyDbFixture, PointQuery)
-(benchmark::State &st)
-{
-    int i = 0;
-    for (auto _ : st)
-    {
-        i = (i++) % numQueries;
-        auto res = pointQuery.search(queries.data() + tree.get_dim() * i);
-        benchmark::DoNotOptimize(res);
-    }
-}
-BENCHMARK_REGISTER_F(MyDbFixture, PointQuery)->Arg(1e3)->Arg(1e4)->Arg(1e5)->Arg(1e6);
 
 BENCHMARK_MAIN();

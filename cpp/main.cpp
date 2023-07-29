@@ -2,7 +2,10 @@
 #include <array>
 
 #include <KDTree/KDTree.h>
+#include <KDTree/Printer.h>
 #include <KDTree/Queries/PointNNQuery.h>
+#include <KDTree/Queries/PointRadiusQuery.h>
+#include <KDTree/Queries/PointkNNQuery.h>
 
 using namespace std;
 using namespace kdtree;
@@ -20,8 +23,8 @@ int main()
     std::cout << "Start" << std::endl;
     srand(0);
 
-    const bool multithreaded = true;
-    const int N = 100000;
+    const bool multithreaded = false;
+    const int N = 1e4;
 
     using Db = kdtree::KDTree<2>;
     Db tree;
@@ -30,13 +33,51 @@ int main()
     tree.build(data.begin(), data.end(), multithreaded);
     std::cout << "Build db" << std::endl;
 
+    std::array<float, 2> target{0.21f, 0.15f};
+
+    if (N <= 20)
+    {
+        std::cout << "TARGET (" << target[0];
+        for (int i = 1; i < target.size(); ++i)
+            std::cout << ", " << target[i];
+        std::cout << ")" << std::endl;
+        kdtree::KDTreePrinter(tree).print();
+    }
+
+    double dist;
+
     if (true)
     {
-        // query one point
+        std::cout << "nn query" << std::endl;
         kdtree::PointNNQuery<Db> query(tree);
-        std::array<float, 2> target{0.1f, 0.15f};
-        auto res = query.search(target.data());
+        auto &res = query.search(target.data()).getResult();
         std::cout << "(" << res.pointer[0] << ", " << res.pointer[1] << ") " << res.distance << std::endl;
+        dist = std::sqrt(res.distance);
+    }
+
+    if (true)
+    {
+        std::cout << "knn query" << std::endl;
+        kdtree::PointkNNQuery<Db> query(tree, 3);
+        auto &res = query.search(target.data()).getResult();
+        for (int i = 0; i < res.results.size(); ++i)
+        {
+            auto &r = res.results[i];
+            std::cout << i << " (" << r.pointer[0] << ", " << r.pointer[1] << ") " << r.distance << std::endl;
+        }
+        dist = std::sqrt(res.results.back().distance);
+    }
+
+    if (true)
+    {
+        std::cout << "radius query " << dist << std::endl;
+        kdtree::PointRadiusQuery<Db> query(tree, dist, true);
+        auto &res = query.search(target.data()).getResult();
+        for (int i = 0; i < res.results.size(); ++i)
+        {
+            auto &r = res.results[i];
+            std::cout << i << " (" << r.pointer[0] << ", " << r.pointer[1] << ") " << r.distance << std::endl;
+        }
     }
 
     std::cout << "End" << std::endl;

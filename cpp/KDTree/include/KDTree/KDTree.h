@@ -3,16 +3,17 @@
 #include <vector>
 #include <numeric>
 #include <cassert>
+
 namespace kdtree
 {
 
-    template <int _DIM>
+    template <int _DIM = -1>
     class KDTree
     {
     public:
         using Scalar = float;
         using IndexType = int32_t;
-        constexpr static int DIM = _DIM;
+        static constexpr int BLOCK_SIZE = 8; // block size in kd-tree
 
         class Navigator
         {
@@ -77,6 +78,11 @@ namespace kdtree
             return Navigator{idxs.size(), data.data()};
         }
 
+        const std::vector<Scalar> &getInternalData() const
+        {
+            return data;
+        }
+
     private:
         void _build(IndexType *begin, IndexType *end, int depth);
         void _build_multithreaded(IndexType *begin, IndexType *end, int depth);
@@ -84,16 +90,12 @@ namespace kdtree
         template <typename Iterator>
         Iterator center(const Iterator begin, const Iterator end)
         {
-            auto median = begin + (end - begin) / 2;
-            // move "median" such that the the lower half is a multiple of BLOCK_SIZE
-            // this ensures that only the very last block might be smaller than BLOCK_SIZE
-            median = median - ((median - begin) % BLOCK_SIZE);
+            size_t halfSize = (end - begin) / 2;
+            auto median = begin + halfSize;
             return median;
         }
 
     private:
-        static const int BLOCK_SIZE = 8; // block size in kd-tree
-
         const int dim;
 
         std::vector<IndexType> idxs;
@@ -127,9 +129,9 @@ namespace kdtree
         std::vector<Scalar> sortedData(data.size());
         for (int idx = 0; idx < idxs.size(); ++idx)
         {
-            auto targetIdx = idxs[idx];
+            auto srcIdx = idxs[idx];
             for (int j = 0; j < dim; ++j)
-                sortedData[targetIdx * dim + j] = data[idx * dim + j];
+                sortedData[idx * dim + j] = data[srcIdx * dim + j];
         }
         data = sortedData;
         std::iota(idxs.begin(), idxs.end(), 0);
@@ -146,9 +148,10 @@ namespace kdtree
         const auto axis = depth % dim;
         auto median = center(begin, end);
 
-        std::nth_element(begin, median, end, [axis, this](const IndexType small, const IndexType &large) -> bool
+        std::nth_element(begin, median, end, [axis, this](const IndexType small, const IndexType large) -> bool
                          { return data[small * dim + axis] < data[large * dim + axis]; });
         std::swap(*begin, *median);
+
         _build(begin + 1, median + 1, depth + 1);
         _build(median + 1, end, depth + 1);
     }
