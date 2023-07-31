@@ -11,6 +11,7 @@
 #include <KDTree/Queries/PointNNQuery.h>
 #include <KDTree/Queries/PointRadiusQuery.h>
 #include <KDTree/Queries/PointkNNQuery.h>
+#include <KDTree/Queries/AlignedRectQuery.h>
 
 using namespace kdtree;
 namespace py = pybind11;
@@ -107,6 +108,24 @@ add_kd_tree(py::module &m, const char *name, int dim) {
                      }
                      return rl;
                  })
+            .def("aligned_rect_search",
+                 [](Tree &tree, const Eigen::VectorXf &lower, const Eigen::VectorXf &upper) {
+                     if (lower.size() != tree.get_dim()) {
+                         throw std::runtime_error(
+                             "Point dimension must match tree dimension");
+                     }
+                     if (upper.size() != tree.get_dim()) {
+                         throw std::runtime_error(
+                             "Point dimension must match tree dimension");
+                     }
+                     AlignedRectQuery<Tree> q(tree);
+                     auto res = q.search(lower.data(), upper.data()).getResult();
+                     py::list rl;
+                     for (auto &r : res.results) {
+                         rl.append(tree.get_index(r.pointer));
+                     }
+                     return rl;
+                 })
             .def("line_nn_search",
                  [](Tree &tree, const Eigen::VectorXf &from,
                     const Eigen::VectorXf &to) {
@@ -159,6 +178,7 @@ add_kd_tree(py::module &m, const char *name, int dim) {
     py::class_<PointkNNQuery<Tree>>(pykdtree2d, "PointkNNQuery");
     py::class_<PointNNQuery<Tree>>(pykdtree2d, "PointNNQuery");
     py::class_<PointRadiusQuery<Tree>>(pykdtree2d, "PointRadiusQuery");
+    py::class_<AlignedRectQuery<Tree>>(pykdtree2d, "AlignedRectQuery");
 }
 
 };   // namespace

@@ -3,6 +3,7 @@
 
 #include <KDTree/KDTree.h>
 #include <KDTree/Printer.h>
+#include <KDTree/Queries/AlignedRectQuery.h>
 #include <KDTree/Queries/PointNNQuery.h>
 #include <KDTree/Queries/PointRadiusQuery.h>
 #include <KDTree/Queries/PointkNNQuery.h>
@@ -74,6 +75,22 @@ main() {
             auto &r = res.results[i];
             std::cout << i << " (" << r.pointer[0] << ", " << r.pointer[1]
                       << ") " << r.distance << std::endl;
+        }
+    }
+
+    if (true)
+    {
+        std::cout << "aligned rect query " << dist << std::endl;
+        std::array<float, 2> target2 = target;
+        for (auto &v : target2)
+            v += std::sqrt(5. / N);
+
+        kdtree::AlignedRectQuery<Db> query(tree);
+        auto &res = query.search(target.data(), target2.data()).getResult();
+        for (int i = 0; i < res.results.size(); ++i)
+        {
+            auto &r = res.results[i];
+            std::cout << i << " (" << r.pointer[0] << ", " << r.pointer[1] << ") " << std::endl;
         }
     }
 

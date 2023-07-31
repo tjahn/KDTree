@@ -14,6 +14,8 @@ CPMAddPackage(
   OPTIONS "BENCHMARK_ENABLE_TESTING Off"
 )
 
+find_package(OpenMP)
+
 if(APPLE)
 
     if(CMAKE_C_COMPILER_ID MATCHES "Clang\$")
@@ -41,6 +43,12 @@ add_subdirectory(benchmarks)
 add_subdirectory(PyKDTree)
 
 
+add_executable(main_benchmark_queries main_benchmark_queries.cpp)
+target_link_libraries(main_benchmark_queries PUBLIC 
+kdtree
+benchmark::benchmark
+OpenMP::OpenMP_CXX
+)
 
 add_executable(main main.cpp)
 target_link_libraries(main PUBLIC 
