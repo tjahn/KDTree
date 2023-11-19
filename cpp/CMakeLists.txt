@@ -15,44 +15,35 @@ CPMAddPackage(
 )
 
 if(APPLE)
-    set(CMAKE_C_COMPILER clang)
-    set(CMAKE_CXX_COMPILER clang++)
 
     if(CMAKE_C_COMPILER_ID MATCHES "Clang\$")
         set(OpenMP_C_FLAGS "-Xpreprocessor -fopenmp")
         set(OpenMP_C_LIB_NAMES "omp")
         set(OpenMP_omp_LIBRARY omp)
+        set(OpenMP_C_FLAGS "-fopenmp=libomp")
     endif()
 
     if(CMAKE_CXX_COMPILER_ID MATCHES "Clang\$")
         set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp")
         set(OpenMP_CXX_LIB_NAMES "omp")
         set(OpenMP_omp_LIBRARY omp)
+        set(OpenMP_C_FLAGS "-fopenmp=libomp")
     endif()
 
 endif()
 
-find_package(OpenMP REQUIRED)
 
 
 add_subdirectory(KDTree)
 
-add_executable(main_benchmark_build_tree main_benchmark_build_tree.cpp)
-target_link_libraries(main_benchmark_build_tree PUBLIC 
-kdtree
-benchmark::benchmark
-OpenMP::OpenMP_CXX
-)
+add_subdirectory(benchmarks)
 
-add_executable(main_benchmark_point_queries main_benchmark_point_queries.cpp)
-target_link_libraries(main_benchmark_point_queries PUBLIC 
-kdtree
-benchmark::benchmark
-OpenMP::OpenMP_CXX
-)
+add_subdirectory(PyKDTree)
+
+
 
 add_executable(main main.cpp)
 target_link_libraries(main PUBLIC 
 kdtree
-OpenMP::OpenMP_CXX
+benchmark::benchmark
 )

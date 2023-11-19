@@ -1,0 +1,18 @@
+
+add_executable(main_benchmark_build_tree main_benchmark_build_tree.cpp)
+target_link_libraries(main_benchmark_build_tree PUBLIC 
+kdtree
+benchmark::benchmark
+)
+
+add_executable(main_benchmark_point_queries main_benchmark_point_queries.cpp)
+target_link_libraries(main_benchmark_point_queries PUBLIC 
+kdtree
+benchmark::benchmark
+)
+
+add_executable(main_benchmark_line_queries main_benchmark_line_queries.cpp)
+target_link_libraries(main_benchmark_line_queries PUBLIC 
+kdtree
+benchmark::benchmark
+)

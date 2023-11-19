@@ -77,6 +77,18 @@
     "iomanip": "cpp",
     "stack": "cpp",
     "thread": "cpp",
-    "iterator": "cpp"
+    "iterator": "cpp",
+    "charconv": "cpp",
+    "forward_list": "cpp",
+    "list": "cpp",
+    "queue": "cpp",
+    "typeindex": "cpp",
+    "unordered_set": "cpp",
+    "valarray": "cpp"
+  },
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "xaver.clang-format",
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.black-formatter"
   }
 }
