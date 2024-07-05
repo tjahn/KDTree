@@ -3,9 +3,10 @@
 
 #include <KDTree/KDTree.h>
 #include <KDTree/Queries/PointNNQuery.h>
-#include <KDTree/Queries/AlignedRectQuery.h>
-#include <KDTree/Queries/PointRadiusQuery.h>
 #include <KDTree/Queries/PointkNNQuery.h>
+#include <KDTree/Queries/PointRadiusQuery.h>
+#include <KDTree/Queries/PointkNNinRadiusQuery.h>
+#include <KDTree/Queries/AlignedRectQuery.h>
 
 using namespace std;
 using namespace kdtree;
@@ -28,6 +29,7 @@ class MyDbFixture : public benchmark::Fixture {
     kdtree::PointkNNQuery<Db2d> point2NNQuery;
     kdtree::PointkNNQuery<Db2d> point8NNQuery;
     kdtree::PointRadiusQuery<Db2d> pointRadiusQuery;
+    kdtree::PointkNNinRadiusQuery<Db2d> point8NNinRadiusQuery;
     kdtree::AlignedRectQuery<Db2d> alignedRectQuery;
 
     int numQueries = 1000;
@@ -37,6 +39,7 @@ class MyDbFixture : public benchmark::Fixture {
                     point2NNQuery(tree, 2),
                     point8NNQuery(tree, 8),
                     pointRadiusQuery(tree, 0.01),
+                    point8NNinRadiusQuery(tree, 8, 0.01),
                     alignedRectQuery(tree)
     {
     }
@@ -111,6 +114,22 @@ BENCHMARK_DEFINE_F(MyDbFixture, PointRadiusQuery)
     }
 }
 BENCHMARK_REGISTER_F(MyDbFixture, PointRadiusQuery)
+    ->Arg(1e3)
+    ->Arg(1e4)
+    ->Arg(1e5)
+    ->Arg(1e6);
+
+BENCHMARK_DEFINE_F(MyDbFixture, Point8NNinRadiusQuery)
+(benchmark::State &st) {
+    int i = 0;
+    for (auto _ : st) {
+        i = (i++) % numQueries;
+        auto &res = point8NNinRadiusQuery.search(queries.data() + tree.get_dim() * i)
+                        .getResult();
+        benchmark::DoNotOptimize(res);
+    }
+}
+BENCHMARK_REGISTER_F(MyDbFixture, Point8NNinRadiusQuery)
     ->Arg(1e3)
     ->Arg(1e4)
     ->Arg(1e5)
